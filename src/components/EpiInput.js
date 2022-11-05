@@ -1,12 +1,19 @@
 import React, {useState} from 'react';
-import {Button, Col, Form, Input, Row, Spin, Typography} from "antd";
+import {Button, Col, Form, Input, Row, Spin, Statistic, Typography} from "antd";
 import {fetchMessages, fetchMessagesForQrCode, handlePaymentRequest} from "../api";
 import _ from "lodash";
 import {generateRandomValue} from "../helpers";
 import QRCode from "react-qr-code";
 import {CheckCircleTwoTone} from '@ant-design/icons'
+import "../App.scss"
 
 const { Title, Text, Link } = Typography;
+
+
+const { Countdown } = Statistic;
+
+const TRANSACTION_PENDING_MESSAGE = 'Thanks for approving, please wait while the transaction is confirmed on chain'
+
 const EpiInput = ({vendorName, amount, onSuccess}) => {
     let intervalForQrPolling;
     const [epiId, setEpiId] = useState('');
@@ -15,6 +22,7 @@ const EpiInput = ({vendorName, amount, onSuccess}) => {
     const [showQrCodeButton, setShowQrCodeButton] = useState(true);
     const [paymentMessage, setPaymentMessage] = useState(null);
     const [loadingMessage, setLoadingMessage] = useState('');
+    const [showQrTimer, setShowQrTimer] = useState(false);
 
     const initialiseQrPaymentFlow = () => {
         const _randomQrId = generateRandomValue();
@@ -24,19 +32,29 @@ const EpiInput = ({vendorName, amount, onSuccess}) => {
             amount
         }))
         setShowQrCodeButton(false);
-        pollForQrMessages(_randomQrId);
 
+        pollForQrMessages(_randomQrId, () => {
+            setIsPaymentMessageProcessing(false);
+        });
+        setShowQrTimer(true);
     }
-    const pollForQrMessages = (qrPollId) => {
+    const pollForQrMessages = (qrPollId, paymentProcessedCallback) => {
         intervalForQrPolling = setInterval(() => {
             fetchMessagesForQrCode(qrPollId)
                 .then(res => {
-                    console.log('qr code messages:', res);
+
                     if (!_.isEmpty(res.messages)) {
-                        // clear interval
                         const _messageInFocus = _.get(res, ['messages'])[0];
-                        // onStatusChange && onStatusChange(_messageInFocus.status);
+
+                        setPaymentMessage({..._messageInFocus});
+
+                        if (_messageInFocus.status === 'pending') {
+                            setIsPaymentMessageProcessing(true)
+                            setLoadingMessage(TRANSACTION_PENDING_MESSAGE);
+                        }
+
                         if (_messageInFocus.status === 'completed') {
+                            paymentProcessedCallback && paymentProcessedCallback();
                             clearInterval(intervalForQrPolling);
                         }
                     }
@@ -52,15 +70,15 @@ const EpiInput = ({vendorName, amount, onSuccess}) => {
         const interval = setInterval(() => {
             fetchMessages(epiId, vendorName)
                 .then(({messages: _messages}) => {
-                    console.log('poll result', _messages);
+
                     const _messageInFocus = _.find(_messages, (_message) => {
                         return parseInt( _message.id) === parseInt(targetMessageId);
                     })
 
                     setPaymentMessage({..._messageInFocus});
-                    console.log('_messageInFocus:', _messageInFocus);
+
                     if (_messageInFocus?.status === 'pending') {
-                        setLoadingMessage('Thanks for approving, please wait while the transaction is confirmed on chain');
+                        setLoadingMessage(TRANSACTION_PENDING_MESSAGE);
                     }
 
                     if (_messageInFocus?.status === 'completed') {
@@ -118,7 +136,6 @@ const EpiInput = ({vendorName, amount, onSuccess}) => {
         </div>
     }
 
-console.log('paymentMessage', paymentMessage);
     return (
         <div>
             <Spin
@@ -164,12 +181,10 @@ console.log('paymentMessage', paymentMessage);
                                 Show QR Code
                             </Button>
                         }
-
                     </div>
                     <Col span={12} className='qr-container' style={showQrCodeButton && {
                         filter: 'blur(18px)'
                     }}>
-
 
                         <div style={{ height: "auto", maxWidth: 200, width: "100%", paddingTop: '12px' }}>
                             <QRCode
@@ -181,15 +196,29 @@ console.log('paymentMessage', paymentMessage);
                         </div>
                     </Col>
                     <Col span={12} className='qr-description'>
-                        <Text strong>
-                            Scan the Qr using the EPI wallet on your phone
-                        </Text>
-                        <Text>
-                            You can access the EPI wallet here: <Link href="https://ant.design" target="_blank">
-                            EPI wallet
-                        </Link>
-                        </Text>
+                        <Row>
+                            <Col span={24}>
+
+                                <Text strong>
+                                    Scan the Qr using the EPI wallet on your phone
+                                </Text>
+                                <Text>
+                                    You can access the EPI wallet here: <Link href="https://wallet-ui-a.herokuapp.com/" target="_blank">
+                                    EPI wallet
+                                </Link>
+                                </Text>
+                            </Col>
+                            {
+                                showQrTimer && <Col span={24} style={{marginTop: '16px'}}>
+                                <Countdown title="QR code valid for" valueStyle={{color: "#ff4d4f"}}
+                                           value={Date.now() + 10 * 60 * 1000} suffix={<Text> Minutes </Text>}/>
+                            </Col>
+                            }
+
+                        </Row>
+
                     </Col>
+
                 </Row>
             </Spin>
         </div>

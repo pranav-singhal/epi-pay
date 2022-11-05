@@ -1,5 +1,7 @@
+import React from "react";
 import {Col, PageHeader, Row} from "antd";
 import {useState} from "react";
+import "./App.scss";
 
 import MethodSelector from "./components/MethodSelector";
 import EpiInput from "./components/EpiInput";

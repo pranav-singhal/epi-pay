@@ -1,5 +1,5 @@
 import "antd/dist/antd.css";
-import './App.css';
+import './App.scss';
 import EpiPay from "./EpiPay";
 import {useState} from "react";
 import {Spin} from "antd";

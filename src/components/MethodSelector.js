@@ -1,13 +1,13 @@
 import React from 'react';
 import {Col, Row, Typography} from "antd";
 import {RightOutlined} from "@ant-design/icons";
-
+import "../App.scss"
 const { Title } = Typography;
 const MethodSelector = ({initialisePaymentFlow, onEpiSelect}) => {
 return (
     <Row>
         <Col span={24}>
-            <Title level={2} className='method-title'>Pay using EPI</Title>
+            <Title level={4} className='method-title'>Pay using EPI</Title>
 
             <Row onClick={onEpiSelect} style={{alignItems: 'center'}} className='method-row'>
                 <Col span={3} className='method-image-container'>
@@ -25,7 +25,7 @@ return (
         </Col>
 
         <Col span={24}>
-            <Title level={2} className='method-title'>Pay using Other Wallets</Title>
+            <Title level={4} className='method-title'>Pay using Other Wallets</Title>
 
             <Row onClick={initialisePaymentFlow} style={{alignItems: 'center'}} className='method-row'>
                 <Col span={3} className='method-image-container'>
