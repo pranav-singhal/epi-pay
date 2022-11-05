@@ -1,105 +1,62 @@
 import "antd/dist/antd.css";
 import './App.css';
-import { Button, Input } from 'antd';
-import { useState } from 'react';
-import _ from 'lodash';
-export const BASE_URL = 'http://localhost:1337';
-
-const getCurrentUser = () => {
-  return localStorage.getItem('current_user');
-}
+import EpiPay from "./EpiPay";
+import {useState} from "react";
+import {Spin} from "antd";
 
 function App() {
-  const [showUserInput, setShowUserInput] = useState(false);
-  const [EpiId, setEpiId] = useState('')
-  const handlePaymentTrigger = () => {
-      setShowUserInput(true)
-  };
 
-  const [paymentObject, setPaymentObject] = useState(null);
-  
-  const handleSendPaymentRequest = () => {
-      // send message
-      handleRequest()
-      .then(result => {
-        console.log('result:', result);
-        pollMessagesForCurrentMessage(result?.data?.id);
-          // start polling messages
-      })
-  }
-
-  const fetchMessages = (threadUser) => {
-    return fetch(`${BASE_URL}/messages?sender=${getCurrentUser()}&recipient=${threadUser}`)
-    .then(res => res.json())
-  };
-
-
-  const pollMessagesForCurrentMessage = (targetMessageId) => {
-    const interval = setInterval(() => {
-        fetchMessages(EpiId)
-        .then(({messages: _messages}) => {
-          console.log('poll result', _messages);
-          const _messageInFocus = _.find(_messages, (_message) => {
-              return parseInt( _message.id) === parseInt(targetMessageId);
-          })
-
-          console.log('_messageInFocus:', _messageInFocus);
-          setPaymentObject(_messageInFocus)
-
-        })
-        .catch(err => {
-          clearInterval(interval);
-          console.error(err)
-        })
-    },2000)
-  }
-
-
-  const handleRequest = () => {
-    const myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-    return fetch(`${BASE_URL}/message`, {
-      method: 'POST',
-      headers: myHeaders,
-      body: JSON.stringify({
-        "type": "request",
-        "sender": getCurrentUser(),
-        "recipient": EpiId,
-        "txDetails": {
-          "amount": 13
-        }
-      }),
-    })
-    .then(response => response.json())
-  }
-
+    const amount = 0.00001;
+    const [messageSent, setIsMessageSent] = useState(false);
+    const [txStatus, setTxStatus] = useState('');
 
   return (
     <div className="App">
-      <Button onClick={handlePaymentTrigger}>
-        pay using EPI
-      </Button>
+     <h1> pay {amount} ETH using epi</h1>
 
-      
-      {showUserInput && <Input placeholder='enter your EPI id' onChange={e => {
-        setEpiId(e.target.value);
-      }} value={EpiId} /> }
+      <EpiPay
+          vendorName='vendor'
+          amount={amount}
+          enableQR
+          onMessageSent={() => {
+              setIsMessageSent(true);
+              console.log('please accept the payment request on your phone')
+          }}
+          onStatusChange={(status) => {
+              setTxStatus(status);
+              console.log('transaction status: ', status);
+          }}
+          onSuccess={() => {
+              setTxStatus('completed');
+              console.log('payment successful');
+          }}
+          onCancel={() => {
+              // handle cancel
+          }}
+      />
 
-{
-  EpiId &&
-  <Button onClick={handleSendPaymentRequest}>
-        send payment request
-      </Button>
-}
+        {
+            messageSent && txStatus === 'unconfirmed' &&
+            <div>
+                Please accept the payment on your phone
+                <Spin />
+            </div>
+        }
 
-{
-  paymentObject && <div> 
-    message status: {paymentObject?.status}
+        {
+            txStatus === 'pending' &&
+            <div>
+                Thanks for approving the payment, please wait while we confirm
+                on chain completion
+            </div>
+        }
 
-  </div>
-}
-      
-    
+        {
+            txStatus === 'completed' &&
+            <div>
+                transaction successfully completed
+            </div>
+        }
 
     </div>
   );
