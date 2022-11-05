@@ -216,9 +216,9 @@ const EpiInput = ({vendorName, amount, onSuccess}) => {
                             </Col>
                             {
                                 showQrTimer && <Col span={24} style={{marginTop: '16px'}}>
-                                <Countdown title="QR code valid for" valueStyle={{color: "#ff4d4f"}}
-                                           value={Date.now() + 10 * 60 * 1000} suffix={<Text> Minutes </Text>}/>
-                            </Col>
+                                    <Countdown title="QR code valid for" valueStyle={{color: "#ff4d4f"}}
+                                               value={Date.now() + 10 * 60 * 1000} suffix={<Text> Minutes </Text>}/>
+                                </Col>
                             }
 
                         </Row>
