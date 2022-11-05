@@ -5,6 +5,7 @@ import "./App.scss";
 
 import MethodSelector from "./components/MethodSelector";
 import EpiInput from "./components/EpiInput";
+import {convertFiatToEth} from "./helpers";
 const PAGES = {
     METHOD_SELECTOR: {
         name: 'method-selector',
@@ -23,8 +24,12 @@ const EpiPay = ({
                     onRejection,
                     onMessageSent,
                     amount,
-                    enableQR
+                    currency,
+                    enableQR,
+                    brandName
 }) => {
+
+    const amountInEth = convertFiatToEth(amount, currency)
 
     const [currentPage, setCurrentPage] = useState(PAGES.METHOD_SELECTOR);
 
@@ -44,12 +49,12 @@ const CurrentPageComponent = currentPage.Component;
                 onBack={() => setCurrentPage(PAGES.METHOD_SELECTOR)}
                 title={<div>
                     {/*TODO - add vendor logo */}
-                    Batch
+                    {brandName}
             </div>}
                 subTitle={<div>
                     Amount: &nbsp;
                     {/*TODO - add eth logo*/}
-                    {amount} ETH
+                    {amountInEth} ETH
                 </div>}
             >
             </PageHeader>
@@ -57,7 +62,7 @@ const CurrentPageComponent = currentPage.Component;
             <CurrentPageComponent
                 onSuccess={onSuccess}
                 vendorName={vendorName}
-                amount={amount}
+                amount={amountInEth}
                 onEpiSelect={() => {
                     setCurrentPage(PAGES.EPI_INPUT)
                 }}

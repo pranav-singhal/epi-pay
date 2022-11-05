@@ -33,6 +33,7 @@ function App() {
           onCancel={() => {
               // handle cancel
           }}
+          brandName={'Meat Story'}
       />
 
         {

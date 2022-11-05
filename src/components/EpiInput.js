@@ -23,6 +23,7 @@ const EpiInput = ({vendorName, amount, onSuccess}) => {
     const [paymentMessage, setPaymentMessage] = useState(null);
     const [loadingMessage, setLoadingMessage] = useState('');
     const [showQrTimer, setShowQrTimer] = useState(false);
+    const [isContinueLoading, setIsContinueLoading] = useState(false);
 
     const initialiseQrPaymentFlow = () => {
         const _randomQrId = generateRandomValue();
@@ -126,7 +127,12 @@ const EpiInput = ({vendorName, amount, onSuccess}) => {
                     </Title>
                 </Col>
                 <Col span={4} offset={10}>
-                    <Button onClick={onSuccess}>
+                    <Button
+                            disabled={isContinueLoading}
+                        onClick={(e) => {
+                        setIsContinueLoading(true);
+                        onSuccess(e)
+                    }}>
                         <Text type='secondary'>
                             Continue
                         </Text>
